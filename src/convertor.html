@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Convertor</title>
+</head>
+<body>
+	<div id="app">
+		<div>
+			<input type="file" id="fileInput" accept="image/*" v-on:change="loadImg">
+			<input type="text" id="fileName" placeholder="File name" v-model="fileName">
+		</div>
+		<div>
+			<a href="data:," v-bind:download="fileName+'.'+extName" v-bind:href="srcImg">Source image</a>
+			<span>{{getSize(srcImg)}},{{getType(srcImg)}}</span>
+			<br>
+			<img src="//:0" alt="Source image" v-bind:src="srcImg"><br>
+		</div>
+		<div>
+			<span>Canvas</span><br>
+			<canvas ref="canvas"></canvas><br>
+		</div>
+		<div>
+			<button type="button" v-on:click="convert">Convert</button>
+			<input type="number" step="0.01" v-model="quality" max="1" min="0">
+			<select v-model="outputType">
+				<option v-for="v in typeList">{{v}}</option>
+			</select>
+		</div>
+		<div>
+			<a href="data:," v-bind:download="fileName" v-bind:href="outputImg">Output</a>
+			<span>{{getSize(outputImg)}},{{getType(outputImg)}}</span>
+			<br>
+			<img src="//:0" alt="Output" v-bind:src="outputImg"><br>
+		</div>
+	</div>
+
+	<script src="vue.min.js"></script>
+	<script>
+		!(function(){
+			/**
+			*load file from input element
+			*@param {HTMLInputElement} inputEle
+			**/
+			const loadFile = async function(inputEle){
+				/** @type {FileList} **/
+				let files = inputEle.files;
+				if(files.length<0) return;
+				let file = files[0];
+				let reader = new FileReader();
+				let imgUrl = await new Promise(resolve=>{
+					reader.onload = function(ev){
+						resolve(this.result)
+					};
+					reader.readAsDataURL(file);
+				});
+				/**@type {{name:String,size:Number,type:String,data:String,lastModified:Number}} **/
+				let result;
+				{
+					let {name,size,type,lastModified} = file;
+					result = {name,size,type,lastModified};
+					result.data = imgUrl;
+				}
+				return result;
+			};
+
+			/** 
+			* @param {String} data 
+			* @return {Promise<HTMLImageElement>}
+			*/
+			const createImg = async function(data){
+				return new Promise(resolve=>{
+					let img = new Image();
+					img.onload = function(){
+						resolve(img);
+					};
+					img.src = data;
+				});
+			};
+
+			/** 
+			* @param {HTMLImageElement} imgElement
+			* @param {HTMLCanvasElement} canvasElement
+			*/
+			const toCanvas = function(imgElement,canvasElement){
+				canvasElement.height = imgElement.height;
+				canvasElement.width = imgElement.width;
+
+				let ctx = canvasElement.getContext('2d');
+				ctx.drawImage(imgElement,0,0);
+			};
+
+			//============================================================
+			function Uint8ToString(u8a){
+				var CHUNK_SZ = 0x8000;
+				var c = '';
+				var length = u8a.length;
+				for (var i=0; i < length; i+=CHUNK_SZ) {
+					c += String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ));
+				}
+				return btoa(c);
+			}
+
+			function StringToUint8(str) {
+				return atob(str).split('').map(function (c) { return c.charCodeAt(0); });
+			}
+			//============================================================
+			const parseDataURL = function(dataURL){
+				let [,,type,data] = dataURL.match(/(data)\:(.+),(.+)/)
+				return {
+					type,data
+				}
+			}
+
+			const app = new Vue({
+				el:'#app',
+				data:{
+					fileName:'',
+					extName:'',
+					srcImg:'//:0',
+					outputImg:'//:0',
+					typeList:['webp','png','jpeg'],
+					outputType:'jpeg',
+					quality:'0.92',
+				},
+				methods:{
+					async loadImg(ev){
+						let result = await loadFile(ev.target);
+						let img = await createImg(result.data);
+						toCanvas(img,this.$refs.canvas);
+						let nameArr = result.name.split('.');
+						this.extName = nameArr.pop();
+						this.fileName = nameArr.join('.');
+						this.srcImg = result.data;
+					},
+					getSize(dataURL){
+						if([null,undefined,'','//:0'].includes(dataURL)){
+							return 0;
+						}
+						return StringToUint8(parseDataURL(dataURL).data).length;
+					},
+					getType(dataURL){
+						if([null,undefined,'','//:0'].includes(dataURL)){
+							return '';
+						}
+						return parseDataURL(dataURL).type;
+					},
+					convert(){
+						this.outputImg = this.$refs.canvas.toDataURL(`image/${this.outputType}`,+this.quality);
+					},
+				}
+			});
+		})();
+	</script>
+</body>
+</html>
