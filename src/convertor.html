@@ -14,7 +14,7 @@
 		</div>
 		<div>
 			<a href="data:," v-bind:download="fileName+'.'+extName" v-bind:href="srcImg">Source image</a>
-			<span>{{getSize(srcImg)}},{{getType(srcImg)}}</span>
+			<span>{{getSize(srcImg)}},{{getType(srcImg)}},{{height}}x{{width}}</span>
 			<br>
 			<img src="//:0" alt="Source image" v-bind:src="srcImg"><br>
 		</div>
@@ -124,6 +124,8 @@
 					typeList:['webp','png','jpeg'],
 					outputType:'jpeg',
 					quality:'0.92',
+					height:'',
+					width:'',
 				},
 				methods:{
 					async loadImg(ev){
@@ -134,6 +136,8 @@
 						this.extName = nameArr.pop();
 						this.fileName = nameArr.join('.');
 						this.srcImg = result.data;
+						this.height = img.height;
+						this.width = img.width;
 					},
 					getSize(dataURL){
 						if([null,undefined,'','//:0'].includes(dataURL)){
