@@ -130,12 +130,11 @@
 				methods:{
 					async loadImg(ev){
 						let result = await loadFile(ev.target);
-						let img = await createImg(result.data);
-						toCanvas(img,this.$refs.canvas);
+						this.srcImg = result.data;
+						let img = await createImg(this.srcImg);
 						let nameArr = result.name.split('.');
 						this.extName = nameArr.pop();
 						this.fileName = nameArr.join('.');
-						this.srcImg = result.data;
 						this.height = img.height;
 						this.width = img.width;
 					},
@@ -151,7 +150,9 @@
 						}
 						return parseDataURL(dataURL).type;
 					},
-					convert(){
+					async convert(){
+						let img = await createImg(this.srcImg);
+						toCanvas(img,this.$refs.canvas);
 						this.outputImg = this.$refs.canvas.toDataURL(`image/${this.outputType}`,+this.quality);
 					},
 				}
