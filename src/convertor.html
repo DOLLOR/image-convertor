@@ -6,7 +6,7 @@
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>Convertor</title>
 </head>
-<body>
+<body style="background-color: #FFFFCC;">
 	<div id="app">
 		<div>
 			<input type="file" id="fileInput" accept="image/*" v-on:change="loadImg">
@@ -40,6 +40,7 @@
 	<script src="vue.min.js"></script>
 	<script>
 		!(function(){
+			"use strict";
 			/**
 			*load file from input element
 			*@param {HTMLInputElement} inputEle
@@ -47,11 +48,11 @@
 			const loadFile = async function(inputEle){
 				/** @type {FileList} **/
 				let files = inputEle.files;
-				if(files.length<0) return;
+				if(files.length<1) return;
 				let file = files[0];
 				let reader = new FileReader();
 				let imgUrl = await new Promise(resolve=>{
-					reader.onload = function(ev){
+					reader.onload = function(){
 						resolve(this.result)
 					};
 					reader.readAsDataURL(file);
@@ -113,7 +114,24 @@
 					type,data
 				}
 			}
+			//===============================================================
+			function canvasFillBackground(canvas,backgroundColor) {
+				var context = canvas.getContext('2d');
 
+				//cache height and width
+				var w = canvas.width;
+				var h = canvas.height;
+
+				//set to draw behind current content
+				context.globalCompositeOperation = "destination-over";
+
+				//set background color
+				context.fillStyle = backgroundColor;
+
+				//draw background / rect on entire canvas
+				context.fillRect(0, 0, w, h);
+			}
+			//===============================================================
 			const app = new Vue({
 				el:'#app',
 				data:{
@@ -121,8 +139,8 @@
 					extName:'',
 					srcImg:'//:0',
 					outputImg:'//:0',
-					typeList:['webp','png','jpeg'],
-					outputType:'jpeg',
+					typeList:['image/webp','image/png','image/jpeg'],
+					outputType:'image/jpeg',
 					quality:'0.92',
 					height:'',
 					width:'',
@@ -153,7 +171,10 @@
 					async convert(){
 						let img = await createImg(this.srcImg);
 						toCanvas(img,this.$refs.canvas);
-						this.outputImg = this.$refs.canvas.toDataURL(`image/${this.outputType}`,+this.quality);
+						if(this.outputType === 'image/jpeg')(()=>{
+							canvasFillBackground(this.$refs.canvas,'#fff');
+						})();
+						this.outputImg = this.$refs.canvas.toDataURL(this.outputType,+this.quality);
 					},
 				}
 			});
