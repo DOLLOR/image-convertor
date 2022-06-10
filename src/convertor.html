@@ -95,7 +95,9 @@
 			};
 
 			//============================================================
-			function Uint8ToString(u8a){
+			function Uint8ToString(
+				/** @type {Uint8Array} */ u8a
+			) {
 				var CHUNK_SZ = 0x8000;
 				var c = '';
 				var length = u8a.length;
@@ -104,19 +106,26 @@
 				}
 				return btoa(c);
 			}
-
+			/**
+			 * @param {string} str
+			 */
 			function StringToUint8(str) {
 				return atob(str).split('').map(function (c) { return c.charCodeAt(0); });
 			}
 			//============================================================
-			const parseDataURL = function(dataURL){
+			const parseDataURL = function (
+				/** @type {string} */ dataURL
+			) {
 				let [,,type,data] = dataURL.match(/(data)\:(.+),(.+)/)
 				return {
 					type,data
 				}
 			}
 			//===============================================================
-			function canvasFillBackground(canvas,backgroundColor) {
+			function canvasFillBackground(
+				/** @type {HTMLCanvasElement} */ canvas,
+				/** @type {string} */ backgroundColor
+			) {
 				var context = canvas.getContext('2d');
 
 				//cache height and width
@@ -148,6 +157,9 @@
 					width:'',
 				},
 				methods:{
+					/** 
+					 * @param {Event} ev
+					 */
 					async loadImg(ev){
 						let result = await loadFile(ev.target);
 						this.srcImg = result.data;
@@ -158,12 +170,18 @@
 						this.height = img.height;
 						this.width = img.width;
 					},
+					/** 
+					 * @param {string} dataURL
+					 */
 					getSize(dataURL){
 						if([null,undefined,'','//:0'].includes(dataURL)){
 							return 0;
 						}
 						return StringToUint8(parseDataURL(dataURL).data).length;
 					},
+					/** 
+					 * @param {string} dataURL
+					 */
 					getType(dataURL){
 						if([null,undefined,'','//:0'].includes(dataURL)){
 							return '';
