@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>Convertor</title>
 </head>
+
 <body style="background-color: #FFFFCC;">
 	<div id="app">
 		<div>
@@ -43,20 +45,20 @@
 	<script src="vue.min.js"></script>
 	<script>
 		// @ts-check
-		void (function(){
+		void (function () {
 			"use strict";
 			/**
 			*load file from input element
 			*@param {HTMLInputElement} inputEle
 			**/
-			const loadFile = async function(inputEle){
+			const loadFile = async function (inputEle) {
 				/** @type {FileList} **/
 				let files = inputEle.files;
-				if(files.length<1) return;
+				if (files.length < 1) return;
 				let file = files[0];
 				let reader = new FileReader();
-				let imgUrl = await new Promise(resolve=>{
-					reader.onload = function(){
+				let imgUrl = await new Promise(resolve => {
+					reader.onload = function () {
 						resolve(this.result)
 					};
 					reader.readAsDataURL(file);
@@ -64,8 +66,8 @@
 				/**@type {{name:String,size:Number,type:String,data:String,lastModified:Number}} **/
 				let result;
 				{
-					let {name,size,type,lastModified} = file;
-					result = {name,size,type,lastModified};
+					let { name, size, type, lastModified } = file;
+					result = { name, size, type, lastModified };
 					result.data = imgUrl;
 				}
 				return result;
@@ -75,10 +77,10 @@
 			* @param {String} data 
 			* @return {Promise<HTMLImageElement>}
 			*/
-			const createImg = async function(data){
-				return new Promise(resolve=>{
+			const createImg = async function (data) {
+				return new Promise(resolve => {
 					let img = new Image();
-					img.onload = function(){
+					img.onload = function () {
 						resolve(img);
 					};
 					img.src = data;
@@ -89,12 +91,12 @@
 			* @param {HTMLImageElement} imgElement
 			* @param {HTMLCanvasElement} canvasElement
 			*/
-			const toCanvas = function(imgElement,canvasElement){
+			const toCanvas = function (imgElement, canvasElement) {
 				canvasElement.height = imgElement.height;
 				canvasElement.width = imgElement.width;
 
 				let ctx = canvasElement.getContext('2d');
-				ctx.drawImage(imgElement,0,0);
+				ctx.drawImage(imgElement, 0, 0);
 			};
 
 			const format = new Intl.NumberFormat(undefined, { useGrouping: true }).format
@@ -105,8 +107,8 @@
 				var CHUNK_SZ = 0x8000;
 				var c = '';
 				var length = u8a.length;
-				for (var i=0; i < length; i+=CHUNK_SZ) {
-					c += String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ));
+				for (var i = 0; i < length; i += CHUNK_SZ) {
+					c += String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ));
 				}
 				return btoa(c);
 			}
@@ -120,9 +122,9 @@
 			const parseDataURL = function (
 				/** @type {string} */ dataURL
 			) {
-				let [,,type,data] = dataURL.match(/(data)\:(.+),(.+)/)
+				let [, , type, data] = dataURL.match(/(data)\:(.+),(.+)/)
 				return {
-					type,data
+					type, data
 				}
 			}
 			//===============================================================
@@ -147,24 +149,24 @@
 			}
 			//===============================================================
 			const app = new Vue({
-				el:'#app',
-				data:{
-					fileName:'',
-					backgroundColor:'',
-					extName:'',
-					srcImg:'//:0',
-					outputImg:'//:0',
-					typeList:['image/webp','image/png','image/jpeg'],
-					outputType:'image/jpeg',
-					quality:'0.92',
-					height:'',
-					width:'',
+				el: '#app',
+				data: {
+					fileName: '',
+					backgroundColor: '',
+					extName: '',
+					srcImg: '//:0',
+					outputImg: '//:0',
+					typeList: ['image/webp', 'image/png', 'image/jpeg'],
+					outputType: 'image/jpeg',
+					quality: '0.92',
+					height: '',
+					width: '',
 				},
-				methods:{
+				methods: {
 					/** 
 					 * @param {Event} ev
 					 */
-					async loadImg(ev){
+					async loadImg(ev) {
 						let result = await loadFile(ev.target);
 						this.srcImg = result.data;
 						let img = await createImg(this.srcImg);
@@ -177,8 +179,8 @@
 					/** 
 					 * @param {string} dataURL
 					 */
-					getSize(dataURL){
-						if([null,undefined,'','//:0'].includes(dataURL)){
+					getSize(dataURL) {
+						if ([null, undefined, '', '//:0'].includes(dataURL)) {
 							return 0;
 						}
 						return format(StringToUint8(parseDataURL(dataURL).data).length);
@@ -186,23 +188,24 @@
 					/** 
 					 * @param {string} dataURL
 					 */
-					getType(dataURL){
-						if([null,undefined,'','//:0'].includes(dataURL)){
+					getType(dataURL) {
+						if ([null, undefined, '', '//:0'].includes(dataURL)) {
 							return '';
 						}
 						return parseDataURL(dataURL).type;
 					},
-					async convert(){
+					async convert() {
 						let img = await createImg(this.srcImg);
-						toCanvas(img,this.$refs.canvas);
-						if(this.backgroundColor)(()=>{
-							canvasFillBackground(this.$refs.canvas,this.backgroundColor);
+						toCanvas(img, this.$refs.canvas);
+						if (this.backgroundColor) (() => {
+							canvasFillBackground(this.$refs.canvas, this.backgroundColor);
 						})();
-						this.outputImg = this.$refs.canvas.toDataURL(this.outputType,+this.quality);
+						this.outputImg = this.$refs.canvas.toDataURL(this.outputType, +this.quality);
 					},
 				},
 			});
 		})();
 	</script>
 </body>
+
 </html>
