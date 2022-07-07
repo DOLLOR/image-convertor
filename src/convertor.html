@@ -15,13 +15,15 @@
 		</div>
 		<div>
 			<a href="data:," v-bind:download="fileName+'.'+extName" v-bind:href="srcImg">Source image</a>
-			<span>{{getSize(srcImg)}},{{getType(srcImg)}},{{height}}x{{width}}</span>
+			<span>{{getSize(srcImg)}} bytes,{{getType(srcImg)}},{{height}}x{{width}}</span>
 			<br>
 			<img src="//:0" alt="Source image" v-bind:src="srcImg"><br>
 		</div>
 		<div>
-			<span>Canvas</span><br>
-			<canvas ref="canvas"></canvas><br>
+			<details>
+				<summary>Canvas preview</summary>
+				<canvas ref="canvas"></canvas><br>
+			</details>
 		</div>
 		<div>
 			<button type="button" v-on:click="convert">Convert</button>
@@ -32,7 +34,7 @@
 		</div>
 		<div>
 			<a href="data:," v-bind:download="fileName" v-bind:href="outputImg">Output</a>
-			<span>{{getSize(outputImg)}},{{getType(outputImg)}}</span>
+			<span>{{getSize(outputImg)}} bytes,{{getType(outputImg)}}</span>
 			<br>
 			<img src="//:0" alt="Output" v-bind:src="outputImg"><br>
 		</div>
@@ -95,6 +97,7 @@
 				ctx.drawImage(imgElement,0,0);
 			};
 
+			const format = new Intl.NumberFormat(undefined, { useGrouping: true }).format
 			//============================================================
 			function Uint8ToString(
 				/** @type {Uint8Array} */ u8a
@@ -178,7 +181,7 @@
 						if([null,undefined,'','//:0'].includes(dataURL)){
 							return 0;
 						}
-						return StringToUint8(parseDataURL(dataURL).data).length;
+						return format(StringToUint8(parseDataURL(dataURL).data).length);
 					},
 					/** 
 					 * @param {string} dataURL
@@ -197,7 +200,7 @@
 						})();
 						this.outputImg = this.$refs.canvas.toDataURL(this.outputType,+this.quality);
 					},
-				}
+				},
 			});
 		})();
 	</script>
