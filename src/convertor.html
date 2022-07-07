@@ -40,6 +40,8 @@
 			<br>
 			<img src="//:0" alt="Output" v-bind:src="outputImg"><br>
 		</div>
+		<br>
+		<div>Vue.js {{vueVersion}}</div>
 	</div>
 
 	<script src="vue.min.js"></script>
@@ -161,6 +163,7 @@
 					quality: '0.92',
 					height: '',
 					width: '',
+					vueVersion: Vue.version,
 				},
 				methods: {
 					/** 
