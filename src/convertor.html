@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -54,11 +55,11 @@
 			*@param {HTMLInputElement} inputEle
 			**/
 			const loadFile = async function (inputEle) {
-				/** @type {FileList} **/
-				let files = inputEle.files;
+				let files = notNil(inputEle.files);
 				if (files.length < 1) return;
 				let file = files[0];
 				let reader = new FileReader();
+				/** @type {string} */
 				let imgUrl = await new Promise(resolve => {
 					reader.onload = function () {
 						resolve(this.result)
@@ -68,9 +69,8 @@
 				/**@type {{name:String,size:Number,type:String,data:String,lastModified:Number}} **/
 				let result;
 				{
-					let { name, size, type, lastModified } = file;
-					result = { name, size, type, lastModified };
-					result.data = imgUrl;
+					const { name, size, type, lastModified } = file;
+					result = { name, size, type, lastModified, data: imgUrl };
 				}
 				return result;
 			};
@@ -97,11 +97,14 @@
 				canvasElement.height = imgElement.height;
 				canvasElement.width = imgElement.width;
 
-				let ctx = canvasElement.getContext('2d');
+				let ctx = notNil(canvasElement.getContext('2d'));
 				ctx.drawImage(imgElement, 0, 0);
 			};
 
 			const format = new Intl.NumberFormat(undefined, { useGrouping: true }).format
+
+			/** @type {<T>(t:T|null|undefined) => NonNullable<T>} */
+			const notNil = x => x;
 			//============================================================
 			function Uint8ToString(
 				/** @type {Uint8Array} */ u8a
@@ -124,7 +127,7 @@
 			const parseDataURL = function (
 				/** @type {string} */ dataURL
 			) {
-				let [, , type, data] = dataURL.match(/(data)\:(.+),(.+)/)
+				let [, , type, data] = notNil(dataURL.match(/(data)\:(.+),(.+)/))
 				return {
 					type, data
 				}
@@ -134,7 +137,7 @@
 				/** @type {HTMLCanvasElement} */ canvas,
 				/** @type {string} */ backgroundColor
 			) {
-				var context = canvas.getContext('2d');
+				var context = notNil(canvas.getContext('2d'));
 
 				//cache height and width
 				var w = canvas.width;
@@ -150,8 +153,33 @@
 				context.fillRect(0, 0, w, h);
 			}
 			//===============================================================
+			/**
+			 * @typedef {object} VUE_DATA
+			 * @property {string} fileName
+			 * @property {string} backgroundColor
+			 * @property {string} extName
+			 * @property {string} srcImg
+			 * @property {string} outputImg
+			 * @property {string[]} typeList
+			 * @property {string} outputType
+			 * @property {string} quality
+			 * @property {number} height
+			 * @property {number} width
+			 * @property {string} vueVersion
+			 */
+
+			/** @typedef {{$refs:{canvas: HTMLCanvasElement}}} VUE_REFS */
+
+			/** @typedef {ThisType<{
+						loadImg: (ev: Event) => Promise<void>;
+						getSize: (dataURL: string) => string;
+						getType: (dataURL: string) => string;
+						convert: ()=> Promise<void>;
+			 * } & VUE_DATA & VUE_REFS>} VUE_THIS */
+
 			const app = new Vue({
 				el: '#app',
+				/** @type {VUE_DATA} */
 				data: {
 					fileName: '',
 					backgroundColor: '',
@@ -161,48 +189,43 @@
 					typeList: ['image/webp', 'image/png', 'image/jpeg'],
 					outputType: 'image/jpeg',
 					quality: '0.92',
-					height: '',
-					width: '',
+					height: 0,
+					width: 0,
 					vueVersion: Vue.version,
 				},
+				/** @type {VUE_THIS} */
 				methods: {
-					/** 
-					 * @param {Event} ev
-					 */
 					async loadImg(ev) {
-						let result = await loadFile(ev.target);
+						let result = notNil(await loadFile(ev.target));
 						this.srcImg = result.data;
 						let img = await createImg(this.srcImg);
 						let nameArr = result.name.split('.');
-						this.extName = nameArr.pop();
+						this.extName = notNil(nameArr.pop());
 						this.fileName = nameArr.join('.');
 						this.height = img.height;
 						this.width = img.width;
 					},
-					/** 
-					 * @param {string} dataURL
-					 */
+
 					getSize(dataURL) {
 						if ([null, undefined, '', '//:0'].includes(dataURL)) {
-							return 0;
+							return '0';
 						}
 						return format(StringToUint8(parseDataURL(dataURL).data).length);
 					},
-					/** 
-					 * @param {string} dataURL
-					 */
+
 					getType(dataURL) {
 						if ([null, undefined, '', '//:0'].includes(dataURL)) {
 							return '';
 						}
 						return parseDataURL(dataURL).type;
 					},
+
 					async convert() {
 						let img = await createImg(this.srcImg);
 						toCanvas(img, this.$refs.canvas);
-						if (this.backgroundColor) (() => {
+						if (this.backgroundColor) {
 							canvasFillBackground(this.$refs.canvas, this.backgroundColor);
-						})();
+						}
 						this.outputImg = this.$refs.canvas.toDataURL(this.outputType, +this.quality);
 					},
 				},
