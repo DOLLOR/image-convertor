@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -104,7 +103,7 @@
 			const format = new Intl.NumberFormat(undefined, { useGrouping: true }).format
 
 			/** @type {<T>(t:T|null|undefined) => NonNullable<T>} */
-			const notNil = x => x;
+			const notNil = x => /** @type {any} */(x);
 			//============================================================
 			function Uint8ToString(
 				/** @type {Uint8Array} */ u8a
@@ -170,16 +169,21 @@
 
 			/** @typedef {{$refs:{canvas: HTMLCanvasElement}}} VUE_REFS */
 
-			/** @typedef {ThisType<{
-						loadImg: (ev: Event) => Promise<void>;
-						getSize: (dataURL: string) => string;
-						getType: (dataURL: string) => string;
-						convert: ()=> Promise<void>;
-			 * } & VUE_DATA & VUE_REFS>} VUE_THIS */
+			/** @typedef {{
+				loadImg: (ev: Event & {target: HTMLInputElement}) => Promise<void>;
+				getSize: (dataURL: string) => string;
+				getType: (dataURL: string) => string;
+				convert: ()=> Promise<void>;
+			 * }} VUE_METHODS */
 
-			const app = new Vue({
+			/** @typedef {{
+				el: string
+				data: VUE_DATA
+				methods: VUE_METHODS & ThisType<VUE_METHODS & VUE_DATA & VUE_REFS>
+			 * }} Options */
+
+			const app = new Vue(/** @satisfies {Options} */({
 				el: '#app',
-				/** @type {VUE_DATA} */
 				data: {
 					fileName: '',
 					backgroundColor: '',
@@ -193,7 +197,6 @@
 					width: 0,
 					vueVersion: Vue.version,
 				},
-				/** @type {VUE_THIS} */
 				methods: {
 					async loadImg(ev) {
 						let result = notNil(await loadFile(ev.target));
@@ -229,7 +232,7 @@
 						this.outputImg = this.$refs.canvas.toDataURL(this.outputType, +this.quality);
 					},
 				},
-			});
+			}));
 		})();
 	</script>
 </body>
